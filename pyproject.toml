@@ -1,0 +1,78 @@
+[tool.poetry]
+name = "arch-api"
+version = "0.1.0"
+description = "Consumes building limits and height plateaus, splits up the building limits according to the height plateaus, and stores these three entities persistently"
+authors = ["Peet Cremer <peet.cremer@gmail.com>"]
+
+[tool.black]
+line-length = 120
+target_version = ['py311']
+include = '\.py$'
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+show-fixes = true
+select = [
+    "B0", # bugbear
+    "E",  # default
+    "F",  # default
+    "I",  # isort
+    "UP",  # pyupgrade
+    "RUF100", # valid noqa annnotations
+]
+ignore = ["E501"]
+exclude = ["src/schemas/*"]
+src = ["src", "tests"]
+cache-dir = ".cache/ruff"
+
+[tool.ruff.isort]
+known-first-party = ["tests"]
+known-third-party = ["fastapi", "pytest", "requests", "responses", "yaml"]
+
+[tool.mypy]
+python_version = "3.11"
+plugins = [
+    "pydantic.mypy",
+]
+check_untyped_defs = true
+ignore_missing_imports = false
+follow_imports = "normal"
+disallow_untyped_defs = true
+#namespace_packages = true
+#disallow_any_generics = true
+disable_error_code = "misc"
+cache_dir = ".cache/mypy"
+pretty = true
+
+[[tool.mypy.overrides]]
+module = [
+  "dotenv"
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "app.*"
+disallow_untyped_decorators = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+dependency-injector = "^4.38.0"
+fastapi = "^0.104.1"
+uvicorn = "^0.23.2"
+motor = "^3.3.1"
+
+[tool.poetry.dev-dependencies]
+mypy = "1.6.0"
+pre-commit = "^3.3.1"
+pytest = "^7.3.1"
+pytest-asyncio = "^0.21.1"
+python-dotenv = "^0.19.2"
+
+
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
