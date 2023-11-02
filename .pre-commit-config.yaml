@@ -17,7 +17,7 @@ repos:
         pass_filenames: false
         require_serial: true
         types: [python]
-        entry: poetry run mypy -v -p src
+        entry: poetry run mypy .
         args:
           - --install-types
           - --non-interactive
