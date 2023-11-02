@@ -4,10 +4,9 @@ from typing import Any
 import bson
 import fastapi
 import uvicorn
+from arch_api.db import delete_split, get_db, get_split, save_split
 from dotenv import load_dotenv
 from fastapi import HTTPException
-
-from db import delete_split, get_db, get_split, save_split
 
 load_dotenv()
 

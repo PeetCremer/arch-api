@@ -22,8 +22,8 @@ select = [
     "RUF100", # valid noqa annnotations
 ]
 ignore = ["E501"]
-exclude = ["src/schemas/*"]
-src = ["src", "tests"]
+exclude = []
+src = ["arch_api", "tests"]
 cache-dir = ".cache/ruff"
 
 [tool.ruff.isort]
@@ -55,6 +55,13 @@ ignore_missing_imports = true
 module = "app.*"
 disallow_untyped_decorators = false
 
+[tool.pytest.ini_options]
+testpaths = ["vectorstore", "scripts"]
+addopts = "-rA"
+cache_dir = ".cache/pytest"
+asyncio_mode = "auto"
+log_cli_level = "DEBUG"
+
 [tool.poetry.dependencies]
 python = "^3.11"
 dependency-injector = "^4.38.0"
@@ -69,8 +76,6 @@ pre-commit = "^3.3.1"
 pytest = "^7.3.1"
 pytest-asyncio = "^0.21.1"
 python-dotenv = "^0.19.2"
-
-
 
 
 [build-system]

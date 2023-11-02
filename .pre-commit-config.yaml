@@ -17,9 +17,20 @@ repos:
         pass_filenames: false
         require_serial: true
         types: [python]
-        entry: poetry run mypy .
+        entry: poetry run mypy -p arch_api -p tests
         args:
           - --install-types
           - --non-interactive
           - --strict
           - --show-error-codes
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 3.0.0
+    hooks:
+      - id: shellcheck
+        stages:
+          - manual
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
