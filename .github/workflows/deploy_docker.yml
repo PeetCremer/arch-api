@@ -20,12 +20,23 @@ jobs:
           token_format: 'access_token'
           access_token_lifetime: '300s' # optional, default: '3600s' (1 hour)
       # Login to Artifact Registry
-      - uses: 'docker/login-action@v1'
+      - name: Docker Login
+        uses: 'docker/login-action@v1'
         with:
           registry: 'europe-west1-docker.pkg.dev'
           username: 'oauth2accesstoken'
           password: '${{ steps.auth.outputs.access_token }}'
       - run: |-
           echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
-
-      - run: echo "yayy 🎉"
+      # Build and push Image
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: arch-api-403919/arch-api-registry/arch-api
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
