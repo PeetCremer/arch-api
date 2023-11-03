@@ -28,11 +28,11 @@ jobs:
           password: '${{ steps.auth.outputs.access_token }}'
       - run: |-
           echo '${{ steps.auth.outputs.access_token }}' | docker login -u oauth2accesstoken --password-stdin https://europe-west1-docker.pkg.dev
-      # Build and push Image
+      # Build and push image
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: arch-api-403919/arch-api-registry/arch-api
+          images: europe-west1-docker.pkg.dev/arch-api-403919/arch-api-registry/arch-api
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
