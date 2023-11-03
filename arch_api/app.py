@@ -65,4 +65,4 @@ async def delete_split_byid(project: str, split_id: str) -> None:
 
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", port=8000, reload=True)
+    uvicorn.run("app:app", host=os.environ["UVICORN_HOST"], port=8000, reload=True)
