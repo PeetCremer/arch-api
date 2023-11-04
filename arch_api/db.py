@@ -12,23 +12,23 @@ def get_db(db_url: str) -> AsyncIOMotorDatabase:
     return db
 
 
-async def save_split(db: AsyncIOMotorDatabase, project: str, split: dict[str, Any]) -> Mapping[str, Any]:
+async def save_split_triple(db: AsyncIOMotorDatabase, project: str, split_triple: dict[str, Any]) -> Mapping[str, Any]:
     # insert
     collection: AsyncIOMotorCollection = db["splits"]
-    res = await collection.insert_one({"project": project, "split": split})
+    res = await collection.insert_one({"project": project, **split_triple})
     # fetch inserted document
-    doc = await get_split(db, project, res.inserted_id)
+    doc = await get_split_triple(db, project, res.inserted_id)
     assert doc is not None
     return doc
 
 
-async def get_split(db: AsyncIOMotorDatabase, project: str, id: bson.ObjectId) -> Mapping[str, Any] | None:
+async def get_split_triple(db: AsyncIOMotorDatabase, project: str, id: bson.ObjectId) -> Mapping[str, Any] | None:
     collection: AsyncIOMotorCollection = db["splits"]
     doc = await collection.find_one({"project": project, "_id": id})
     return doc
 
 
-async def delete_split(db: AsyncIOMotorDatabase, project: str, id: bson.ObjectId) -> bool:
+async def delete_split_triple(db: AsyncIOMotorDatabase, project: str, id: bson.ObjectId) -> bool:
     collection: AsyncIOMotorCollection = db["splits"]
     res = await collection.delete_one({"project": project, "_id": id})
     return res.deleted_count > 0

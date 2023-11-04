@@ -8,6 +8,7 @@ from arch_api.models.geometry import (
     HeightPlateaus,
     Polygon2d,
     Polygon2dFeature,
+    Polygon2dFeatureCollection,
 )
 from geojson_pydantic import Feature, Point
 from pydantic import ValidationError
@@ -86,14 +87,19 @@ class TestPolygon2dFeatureCollection:
     """
 
     def test_valid(self, building_limits: dict[str, Any]) -> None:
-        _building_limits = BuildingLimits(**building_limits)
+        _feature_collection = BuildingLimits(**building_limits)
 
     def test_invalid_feature(self) -> None:
         point = Point(type="Point", coordinates=[0.0, 0.0])
         feature: Feature[Point, dict[str, Any]] = Feature(type="Feature", geometry=point, properties=None)
         # Should complain about Polygon2dFeature in error message
         with pytest.raises(ValidationError, match="Polygon2dFeature"):
-            _building_limits = BuildingLimits(type="FeatureCollection", features=[feature])
+            _feature_collection = Polygon2dFeatureCollection(type="FeatureCollection", features=[feature])
+
+    def test_model_dump(self, building_limits: dict[str, Any]) -> None:
+        feature_collection = Polygon2dFeatureCollection(**building_limits)
+        dump = feature_collection.model_dump()
+        assert isinstance(dump, dict)
 
 
 class TestHeightPlateaus:

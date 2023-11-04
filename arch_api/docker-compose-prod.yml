@@ -1,5 +1,14 @@
 version: '3.5'
 services:
+  arch_api:
+    image: europe-west1-docker.pkg.dev/arch-api-403919/arch-api-registry/arch-api:latest
+    restart: always
+    ports:
+      - "80:8000"
+    networks:
+      - arch-api
+    environment:
+      MONGODB_URL: mongodb://root:example@mongo:27017/
   mongo:
     image: mongo
     restart: always
@@ -7,8 +16,6 @@ services:
       - arch-api
     volumes:
       - "./data/db:/data/db"
-    ports:
-      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example

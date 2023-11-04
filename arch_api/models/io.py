@@ -12,7 +12,7 @@ class SplitInput(BaseModel):
 
 
 class SplitOutput(ProjectMixin):
-    _id: str
+    id: str
     building_limits: BuildingLimits
     height_plateaus: HeightPlateaus
     # The splits need to have elevation populated
