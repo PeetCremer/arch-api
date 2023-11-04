@@ -4,6 +4,10 @@ version = "0.1.0"
 description = "Consumes building limits and height plateaus, splits up the building limits according to the height plateaus, and stores these three entities persistently"
 authors = ["Peet Cremer <peet.cremer@gmail.com>"]
 
+[tool.poetry.group.dev.dependencies]
+jupyterlab = "^4.0.8"
+geojsonio = "^0.0.3"
+
 [tool.black]
 line-length = 120
 target_version = ['py311']
@@ -47,7 +51,8 @@ pretty = true
 
 [[tool.mypy.overrides]]
 module = [
-  "dotenv"
+  "dotenv",
+  "geojson",
 ]
 ignore_missing_imports = true
 
@@ -63,13 +68,14 @@ asyncio_mode = "auto"
 log_cli_level = "DEBUG"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.12"
 dependency-injector = "^4.38.0"
 fastapi = "^0.104.1"
 uvicorn = "^0.23.2"
 motor = "^3.3.1"
 motor-types = "^1.0.0b3"
 python-dotenv = "^0.19.2"
+geojson-pydantic = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "1.6.0"
