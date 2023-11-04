@@ -64,7 +64,7 @@ class HeightPlateaus(Polygon2dFeatureCollection):
         return features
 
 
-class Splits(HeightPlateaus):
+class Split(HeightPlateaus):
     """
     Splits are from a dataclass perspective the same as HeightPlateaus,
     as they need to have elevation populated
