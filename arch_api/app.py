@@ -3,7 +3,15 @@ import os
 
 import bson
 import fastapi
-from arch_api.db import delete_all_split_triples, delete_split_triple, get_db, get_split_triple, save_split_triple
+from arch_api.db import (
+    MAX_PAGE_SIZE,
+    delete_all_split_triples,
+    delete_split_triple,
+    get_db,
+    get_split_triple,
+    list_split_triples,
+    save_split_triple,
+)
 from arch_api.exceptions import SplittingError, invalid_object_id_handler
 from arch_api.models.io import CreateSplitInput, CreateSplitOutput
 from arch_api.splitting import split_building_limits_by_height_plateaus
@@ -19,7 +27,7 @@ _DATABASE = get_db(os.environ["MONGODB_URL"])
 app = fastapi.FastAPI(
     title="Architecture API (arch-api)",
     description=(
-        "Consumes building limits and height plateaus, splits up the building limits"
+        "Consumes building limits and height plateaus, splits up the building limits "
         "according to the height plateaus, and stores these three entities persistently"
     ),
 )
@@ -80,3 +88,9 @@ async def delete_split(project: str, id: str) -> None:
 async def delete_all_splits(project: str) -> dict[str, int]:
     num_deleted = await delete_all_split_triples(_DATABASE, project)
     return {"num_deleted": num_deleted}
+
+
+@app.get("/projects/{project}/splits", status_code=fastapi.status.HTTP_200_OK)
+async def list_splits(project: str, skip: int = 0, limit: int = MAX_PAGE_SIZE) -> list[CreateSplitOutput]:
+    docs = await list_split_triples(_DATABASE, project, skip, limit)
+    return [CreateSplitOutput.from_doc(doc) for doc in docs]
