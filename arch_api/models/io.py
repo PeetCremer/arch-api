@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from arch_api.models.geojson import Polygon2dFeature, Polygon2dFeatureCollection
+from arch_api.models.geojson import NonEmptyPolygon2dFeatureCollection, Polygon2dFeature
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -9,19 +9,21 @@ class ProjectMixin(BaseModel):
     project: str = Field(..., min_length=1, max_length=50)
 
 
-class BuildingLimits(Polygon2dFeatureCollection):
+class BuildingLimits(NonEmptyPolygon2dFeatureCollection):
     """
     BuildingLimits are effectively a FeatureCollection of 2d Polygons
+    with at least one polygon
     """
 
+    # TODO add check that at least one feature is present
     ...
 
 
-class HeightPlateaus(Polygon2dFeatureCollection):
+class HeightPlateaus(NonEmptyPolygon2dFeatureCollection):
     """
     HeightPlateaus are a FeatureCollection of 2d Polygons
-    with the additional constraint that the features need
-    to have the "elevation" property set with a valid float
+    with at least one polygon and the additional constraint that the
+    features need to have the "elevation" property set with a valid float
     """
 
     features: list[Polygon2dFeature]

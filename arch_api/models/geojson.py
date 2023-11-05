@@ -5,7 +5,7 @@ from typing import Any
 
 from geojson_pydantic.features import Feature, FeatureCollection
 from geojson_pydantic.geometries import Polygon
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 
 
 class Polygon2d(Polygon):
@@ -28,9 +28,15 @@ class Polygon2dFeature(Feature[Polygon2d, dict[str, Any]]):
     geometry: Polygon2d
 
 
-class Polygon2dFeatureCollection(FeatureCollection[Polygon2dFeature]):
+class NonEmptyPolygon2dFeatureCollection(FeatureCollection[Polygon2dFeature]):
     """
     FeatureCollection restricted to features with the 2d Polygon geometry
+    that contains at least 1 polygon
     """
 
-    ...
+    @field_validator("features", mode="after")
+    @classmethod
+    def check_features_nonempty(cls, features: list[Polygon2dFeature]) -> list[Polygon2dFeature]:
+        if len(features) == 0:
+            raise ValueError("FeatureCollection must contain at least 1 feature")
+        return features

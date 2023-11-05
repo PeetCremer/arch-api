@@ -2,9 +2,9 @@ from typing import Any
 
 import pytest
 from arch_api.models.geojson import (
+    NonEmptyPolygon2dFeatureCollection,
     Polygon2d,
     Polygon2dFeature,
-    Polygon2dFeatureCollection,
 )
 from geojson_pydantic import Feature, Point
 from pydantic import ValidationError
@@ -39,23 +39,27 @@ class TestPolygon2dFeature:
             _feature = Polygon2dFeature(type="Feature", geometry=point, properties=None)
 
 
-class TestPolygon2dFeatureCollection:
+class TestNonEmptyPolygon2dFeatureCollection:
     """
     This also tests BuildingLimits and HeightPlateaus, as they are
-    derived from Polygon2dFeatureCollection
+    derived from NonEmptyPolygon2dFeatureCollection
     """
 
     def test_valid(self, building_limits: dict[str, Any]) -> None:
-        _feature_collection = Polygon2dFeatureCollection(**building_limits)
+        _feature_collection = NonEmptyPolygon2dFeatureCollection(**building_limits)
 
     def test_invalid_feature(self) -> None:
         point = Point(type="Point", coordinates=[0.0, 0.0])
         feature: Feature[Point, dict[str, Any]] = Feature(type="Feature", geometry=point, properties=None)
         # Should complain about Polygon2dFeature in error message
         with pytest.raises(ValidationError, match="Polygon2dFeature"):
-            _feature_collection = Polygon2dFeatureCollection(type="FeatureCollection", features=[feature])
+            _feature_collection = NonEmptyPolygon2dFeatureCollection(type="FeatureCollection", features=[feature])
+
+    def test_invalid_empty_features(self) -> None:
+        with pytest.raises(ValidationError, match="FeatureCollection must contain at least 1 feature"):
+            _feature_collection = NonEmptyPolygon2dFeatureCollection(type="FeatureCollection", features=[])
 
     def test_model_dump(self, building_limits: dict[str, Any]) -> None:
-        feature_collection = Polygon2dFeatureCollection(**building_limits)
+        feature_collection = NonEmptyPolygon2dFeatureCollection(**building_limits)
         dump = feature_collection.model_dump()
         assert isinstance(dump, dict)

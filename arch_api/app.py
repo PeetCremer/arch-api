@@ -4,7 +4,9 @@ import os
 import bson
 import fastapi
 from arch_api.db import delete_all_split_triples, delete_split_triple, get_db, get_split_triple, save_split_triple
+from arch_api.exceptions import HANDLERS
 from arch_api.models.io import CreateSplitInput, CreateSplitOutput
+from arch_api.splitting import split_building_limits_by_height_plateaus
 from dotenv import load_dotenv
 from fastapi import HTTPException
 
@@ -20,6 +22,9 @@ app = fastapi.FastAPI(
         "according to the height plateaus, and stores these three entities persistently"
     ),
 )
+# Attach exception handlers
+for exc, handler in HANDLERS.items():
+    app.add_exception_handler(exc, handler)
 
 
 @app.get("/health")
@@ -45,20 +50,20 @@ async def get_split(project: str, id: str) -> CreateSplitOutput:
 
 @app.post("/projects/{project}/splits", status_code=fastapi.status.HTTP_201_CREATED)
 async def create_split(project: str, input: CreateSplitInput) -> CreateSplitOutput:
-    # TODO make bad input (pydantic validation error) return 400
     # TODO create a proper split. For now, we just copy the height_plateaus
     logging.debug("Processing split")
-    split = input.height_plateaus
+    split = split_building_limits_by_height_plateaus(input.building_limits, input.height_plateaus)
+    logging.debug("Processing split done")
 
     # Persist the split
-    logging.debug("Before save_split")
+    logging.debug("Before save_split_triple")
     split_triple = {
         "building_limits": input.building_limits.model_dump(),
         "height_plateaus": input.height_plateaus.model_dump(),
         "split": split.model_dump(),
     }
     doc = await save_split_triple(_DATABASE, project, split_triple)
-    logging.debug("After save_split")
+    logging.debug("After save_split_triple")
 
     # Build output object
     return CreateSplitOutput.from_doc(doc)
