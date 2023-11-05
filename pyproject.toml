@@ -53,7 +53,7 @@ pretty = true
 [[tool.mypy.overrides]]
 module = [
   "dotenv",
-  "geojson",
+  "geopandas",
 ]
 ignore_missing_imports = true
 
@@ -77,6 +77,7 @@ motor = "^3.3.1"
 motor-types = "^1.0.0b3"
 python-dotenv = "^0.19.2"
 geojson-pydantic = "^1.0.1"
+geopandas = "^0.14.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "1.6.0"
