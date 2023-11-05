@@ -1,3 +1,6 @@
+from collections.abc import Mapping
+from typing import Any
+
 from arch_api.models.geojson import Polygon2dFeature, Polygon2dFeatureCollection
 from pydantic import BaseModel, Field, field_validator
 
@@ -43,14 +46,23 @@ class Split(HeightPlateaus):
     ...
 
 
-class SplitInput(BaseModel):
+class CreateSplitInput(BaseModel):
     building_limits: BuildingLimits
     height_plateaus: HeightPlateaus
 
 
-class SplitOutput(ProjectMixin):
+class CreateSplitOutput(ProjectMixin):
     id: str
     building_limits: BuildingLimits
     height_plateaus: HeightPlateaus
     # The splits need to have elevation populated
     split: Split
+
+    def from_doc(doc: Mapping[str, Any]) -> "CreateSplitOutput":
+        return CreateSplitOutput(
+            id=str(doc["_id"]),
+            project=doc["project"],
+            building_limits=doc["building_limits"],
+            height_plateaus=doc["height_plateaus"],
+            split=doc["split"],
+        )

@@ -1,12 +1,11 @@
 import logging
 import os
-from typing import Any
 
 import bson
 import fastapi
 import uvicorn
 from arch_api.db import delete_all_split_triples, delete_split_triple, get_db, get_split_triple, save_split_triple
-from arch_api.models.io import SplitInput, SplitOutput
+from arch_api.models.io import CreateSplitInput, CreateSplitOutput
 from dotenv import load_dotenv
 from fastapi import HTTPException
 
@@ -30,7 +29,7 @@ async def health() -> dict[str, str]:
 
 
 @app.get("/projects/{project}/splits/{id}")
-async def get_split(project: str, id: str) -> dict[str, Any]:
+async def get_split(project: str, id: str) -> CreateSplitOutput:
     try:
         object_id = bson.ObjectId(id)
     except bson.errors.InvalidId as e:
@@ -39,15 +38,13 @@ async def get_split(project: str, id: str) -> dict[str, Any]:
     doc = await get_split_triple(database, project, object_id)
     if doc is None:
         raise HTTPException(status_code=404, detail="Split not found")
-    doc = dict(doc)
-    # unwrap ObjectId before returning
-    doc["id"] = str(doc["_id"])
-    del doc["_id"]
-    return doc
+
+    # Build output object
+    return CreateSplitOutput.from_doc(doc)
 
 
 @app.post("/projects/{project}/splits", status_code=fastapi.status.HTTP_201_CREATED)
-async def create_split(project: str, input: SplitInput) -> SplitOutput:
+async def create_split(project: str, input: CreateSplitInput) -> CreateSplitOutput:
     # TODO make bad input (pydantic validation error) return 400
     # TODO create a proper split. For now, we just copy the height_plateaus
     logging.debug("Processing split")
@@ -64,15 +61,7 @@ async def create_split(project: str, input: SplitInput) -> SplitOutput:
     logging.debug("After save_split")
 
     # Build output object
-    doc = dict(doc)
-
-    return SplitOutput(
-        project=project,
-        id=str(doc["_id"]),
-        building_limits=doc["building_limits"],
-        height_plateaus=doc["height_plateaus"],
-        split=doc["split"],
-    )
+    return CreateSplitOutput.from_doc(doc)
 
 
 @app.delete("/projects/{project}/splits/{id}", status_code=fastapi.status.HTTP_204_NO_CONTENT)

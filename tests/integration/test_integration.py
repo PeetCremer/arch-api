@@ -1,9 +1,14 @@
+from collections import OrderedDict
 from typing import Any
 
 import fastapi
 import pytest
 
 from tests.integration.conftest import TestClient
+
+
+def dict_to_deep_ordered_dict(d: dict[str, Any]) -> OrderedDict[str, Any]:
+    return OrderedDict({k: dict_to_deep_ordered_dict(v) if isinstance(v, dict) else v for k, v in d.items()})
 
 
 async def delete_all_splits(test_client: TestClient) -> int:
@@ -102,5 +107,23 @@ class TestDeleteSplit:
         response = await test_client.delete_split(created_split["id"])
         assert response.status_code == fastapi.status.HTTP_204_NO_CONTENT
         response = await test_client.delete_split(created_split["id"])
+        assert response.status_code == fastapi.status.HTTP_404_NOT_FOUND
+        assert response.json().get("detail") == "Split not found"
+
+
+class TestGetSplit:
+    @pytest.mark.asyncio
+    async def test_valid(self, test_client: TestClient, created_split: dict[str, Any]) -> None:
+        response = await test_client.get_split(created_split["id"])
+        assert response.status_code == fastapi.status.HTTP_200_OK
+        split: dict[str, Any] = response.json()
+        # should be equal to created split except for ordering of elements
+        assert dict_to_deep_ordered_dict(split) == dict_to_deep_ordered_dict(created_split)
+
+    @pytest.mark.asyncio
+    async def test_missing(self, test_client: TestClient, created_split: dict[str, Any]) -> None:
+        response = await test_client.delete_split(created_split["id"])
+        assert response.status_code == fastapi.status.HTTP_204_NO_CONTENT
+        response = await test_client.get_split(created_split["id"])
         assert response.status_code == fastapi.status.HTTP_404_NOT_FOUND
         assert response.json().get("detail") == "Split not found"
