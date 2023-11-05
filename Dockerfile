@@ -29,4 +29,4 @@ COPY arch_api/ /app/arch_api
 ENV UVICORN_HOST="0.0.0.0"
 EXPOSE 8000
 
-ENTRYPOINT ["python", "/app/arch_api/app.py"]
+ENTRYPOINT ["python", "/app/arch_api"]

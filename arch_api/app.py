@@ -3,15 +3,16 @@ import os
 
 import bson
 import fastapi
-import uvicorn
 from arch_api.db import delete_all_split_triples, delete_split_triple, get_db, get_split_triple, save_split_triple
 from arch_api.models.io import CreateSplitInput, CreateSplitOutput
 from dotenv import load_dotenv
 from fastapi import HTTPException
 
+# Initialize DB
 load_dotenv()
-logging.basicConfig(level=os.environ.get("LOG_LEVEL", logging.DEBUG))
+_DATABASE = get_db(os.environ["MONGODB_URL"])
 
+# Intialize app
 app = fastapi.FastAPI(
     title="Architecture API (arch-api)",
     description=(
@@ -19,8 +20,6 @@ app = fastapi.FastAPI(
         "according to the height plateaus, and stores these three entities persistently"
     ),
 )
-
-database = get_db(os.environ["MONGODB_URL"])
 
 
 @app.get("/health")
@@ -30,12 +29,13 @@ async def health() -> dict[str, str]:
 
 @app.get("/projects/{project}/splits/{id}")
 async def get_split(project: str, id: str) -> CreateSplitOutput:
+    # TODO move into exception handler
     try:
         object_id = bson.ObjectId(id)
     except bson.errors.InvalidId as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    doc = await get_split_triple(database, project, object_id)
+    doc = await get_split_triple(_DATABASE, project, object_id)
     if doc is None:
         raise HTTPException(status_code=404, detail="Split not found")
 
@@ -57,7 +57,7 @@ async def create_split(project: str, input: CreateSplitInput) -> CreateSplitOutp
         "height_plateaus": input.height_plateaus.model_dump(),
         "split": split.model_dump(),
     }
-    doc = await save_split_triple(database, project, split_triple)
+    doc = await save_split_triple(_DATABASE, project, split_triple)
     logging.debug("After save_split")
 
     # Build output object
@@ -71,19 +71,12 @@ async def delete_split(project: str, id: str) -> None:
     except bson.errors.InvalidId as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    deleted = await delete_split_triple(database, project, object_id)
+    deleted = await delete_split_triple(_DATABASE, project, object_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Split not found")
 
 
 @app.delete("/projects/{project}/splits", status_code=fastapi.status.HTTP_200_OK)
 async def delete_all_splits(project: str) -> dict[str, int]:
-    num_deleted = await delete_all_split_triples(database, project)
+    num_deleted = await delete_all_split_triples(_DATABASE, project)
     return {"num_deleted": num_deleted}
-
-
-# TODO listing endpoints
-
-
-if __name__ == "__main__":
-    uvicorn.run("app:app", host=os.environ["UVICORN_HOST"], port=8000, reload=True)
