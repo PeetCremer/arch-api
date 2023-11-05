@@ -1,3 +1,5 @@
+import asyncio
+from collections.abc import AsyncIterator, Iterator
 from typing import Any
 
 import pytest
@@ -36,7 +38,18 @@ class TestClient(AsyncClient):
         return response
 
 
-@pytest.fixture
-async def test_client() -> TestClient:
+# override pytests event loop to be module scoped
+# to avoid "RuntimeError: Event loop is closed" errors
+# when running multiple tests in parallel
+@pytest.fixture(scope="module")
+def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
+    loop = asyncio.get_event_loop()
+    yield loop
+    loop.close()
+
+
+# test_client must be module scoped, same as event_loop
+@pytest.fixture(scope="module")
+async def test_client() -> AsyncIterator[TestClient]:
     async with TestClient() as client:
         yield client

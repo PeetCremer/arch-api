@@ -62,7 +62,7 @@ module = "app.*"
 disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]
-testpaths = ["vectorstore", "scripts"]
+testpaths = ["tests"]
 addopts = "-rA"
 cache_dir = ".cache/pytest"
 asyncio_mode = "auto"
