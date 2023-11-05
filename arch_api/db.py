@@ -32,3 +32,9 @@ async def delete_split_triple(db: AsyncIOMotorDatabase, project: str, id: bson.O
     collection: AsyncIOMotorCollection = db["splits"]
     res = await collection.delete_one({"project": project, "_id": id})
     return res.deleted_count > 0
+
+
+async def delete_all_split_triples(db: AsyncIOMotorDatabase, project: str) -> int:
+    collection: AsyncIOMotorCollection = db["splits"]
+    res = await collection.delete_many({"project": project})
+    return res.deleted_count
