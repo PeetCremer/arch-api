@@ -82,5 +82,8 @@ async def delete_all_splits(project: str) -> dict[str, int]:
     return {"num_deleted": num_deleted}
 
 
+# TODO listing endpoints
+
+
 if __name__ == "__main__":
     uvicorn.run("app:app", host=os.environ["UVICORN_HOST"], port=8000, reload=True)
