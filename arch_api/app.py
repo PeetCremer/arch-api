@@ -4,9 +4,10 @@ import os
 import bson
 import fastapi
 from arch_api.db import delete_all_split_triples, delete_split_triple, get_db, get_split_triple, save_split_triple
-from arch_api.exceptions import HANDLERS
+from arch_api.exceptions import SplittingError, invalid_object_id_handler
 from arch_api.models.io import CreateSplitInput, CreateSplitOutput
 from arch_api.splitting import split_building_limits_by_height_plateaus
+from bson.errors import InvalidId
 from dotenv import load_dotenv
 from fastapi import HTTPException
 
@@ -23,8 +24,8 @@ app = fastapi.FastAPI(
     ),
 )
 # Attach exception handlers
-for exc, handler in HANDLERS.items():
-    app.add_exception_handler(exc, handler)
+app.add_exception_handler(InvalidId, invalid_object_id_handler)
+app.add_exception_handler(SplittingError, invalid_object_id_handler)
 
 
 @app.get("/health")
@@ -34,11 +35,8 @@ async def health() -> dict[str, str]:
 
 @app.get("/projects/{project}/splits/{id}")
 async def get_split(project: str, id: str) -> CreateSplitOutput:
-    # TODO move into exception handler
-    try:
-        object_id = bson.ObjectId(id)
-    except bson.errors.InvalidId as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    # potential bson.errors.InvalidId is handled by exception handler
+    object_id = bson.ObjectId(id)
 
     doc = await get_split_triple(_DATABASE, project, object_id)
     if doc is None:
@@ -70,10 +68,8 @@ async def create_split(project: str, input: CreateSplitInput) -> CreateSplitOutp
 
 @app.delete("/projects/{project}/splits/{id}", status_code=fastapi.status.HTTP_204_NO_CONTENT)
 async def delete_split(project: str, id: str) -> None:
-    try:
-        object_id = bson.ObjectId(id)
-    except bson.errors.InvalidId as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    # potential bson.errors.InvalidId is handled by exception handler
+    object_id = bson.ObjectId(id)
 
     deleted = await delete_split_triple(_DATABASE, project, object_id)
     if not deleted:
