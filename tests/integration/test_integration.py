@@ -27,9 +27,9 @@ async def create_sample_split(
     }
     response = await test_client.create_split(input)
     assert response.status_code == fastapi.status.HTTP_201_CREATED
-    output = response.json()
-    assert isinstance(output, dict)
-    return output
+    split = response.json()
+    assert isinstance(split, dict)
+    return split
 
 
 @pytest.fixture
@@ -43,12 +43,23 @@ async def created_split(
     assert response.status_code in [fastapi.status.HTTP_204_NO_CONTENT, fastapi.status.HTTP_404_NOT_FOUND]
 
 
+@pytest.fixture
+async def created_multiple_splits(
+    test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
+) -> list[dict[str, Any]]:
+    num = 10
+    splits = [await create_sample_split(test_client, building_limits, height_plateaus) for i in range(num)]
+    yield splits
+    # Teardown
+    for split in splits:
+        response = await test_client.delete_split(split["id"])
+        assert response.status_code in [fastapi.status.HTTP_204_NO_CONTENT, fastapi.status.HTTP_404_NOT_FOUND]
+
+
 class TestCreateSplit:
     @pytest.mark.asyncio
-    async def test_valid(
-        self, test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
-    ) -> None:
-        _split = await create_sample_split(test_client, building_limits, height_plateaus)
+    async def test_valid(self, created_split: dict[str, Any]) -> None:
+        pass
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("missing", ["building_limits", "height_plateaus"])
@@ -110,6 +121,12 @@ class TestDeleteSplit:
         assert response.status_code == fastapi.status.HTTP_404_NOT_FOUND
         assert response.json().get("detail") == "Split not found"
 
+    @pytest.mark.asyncio
+    async def test_invalid_id(self, test_client: TestClient) -> None:
+        response = await test_client.delete_split("invalid")
+        assert response.status_code == fastapi.status.HTTP_400_BAD_REQUEST
+        assert "'invalid' is not a valid ObjectId" in response.json().get("detail")
+
 
 class TestGetSplit:
     @pytest.mark.asyncio
@@ -127,3 +144,23 @@ class TestGetSplit:
         response = await test_client.get_split(created_split["id"])
         assert response.status_code == fastapi.status.HTTP_404_NOT_FOUND
         assert response.json().get("detail") == "Split not found"
+
+    @pytest.mark.asyncio
+    async def test_invalid_id(self, test_client: TestClient) -> None:
+        response = await test_client.get_split("invalid")
+        assert response.status_code == fastapi.status.HTTP_400_BAD_REQUEST
+        assert "'invalid' is not a valid ObjectId" in response.json().get("detail")
+
+
+class TestDeleteAllSplits:
+    @pytest.mark.asyncio
+    async def test_delete_zero(self, test_client: TestClient) -> None:
+        num_deleted = await delete_all_splits(test_client)
+        assert num_deleted == 0
+
+    @pytest.mark.asyncio
+    async def test_delete_multiple(
+        self, test_client: TestClient, created_multiple_splits: list[dict[str, Any]]
+    ) -> None:
+        num_deleted = await delete_all_splits(test_client)
+        assert num_deleted == len(created_multiple_splits)
