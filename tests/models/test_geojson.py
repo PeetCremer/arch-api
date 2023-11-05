@@ -1,54 +1,13 @@
-import json
-from pathlib import Path
 from typing import Any
 
 import pytest
-from arch_api.models.geometry import (
-    BuildingLimits,
-    HeightPlateaus,
+from arch_api.models.geojson import (
     Polygon2d,
     Polygon2dFeature,
     Polygon2dFeatureCollection,
 )
 from geojson_pydantic import Feature, Point
 from pydantic import ValidationError
-
-_TEST_CASES_PATH = Path(__file__).parent.parent / "cases"
-
-
-@pytest.fixture
-def building_limits() -> dict[str, Any]:
-    with open(_TEST_CASES_PATH / "1" / "building_limits.geojson") as f:
-        building_limits: dict[str, Any] = json.load(f)
-    return building_limits
-
-
-@pytest.fixture
-def height_plateaus() -> dict[str, Any]:
-    with open(_TEST_CASES_PATH / "1" / "height_plateaus.geojson") as f:
-        height_plateaus: dict[str, Any] = json.load(f)
-    return height_plateaus
-
-
-@pytest.fixture
-def feature(building_limits: dict[str, Any]) -> dict[str, Any]:
-    feature = building_limits["features"][0]
-    assert isinstance(feature, dict)
-    return feature
-
-
-@pytest.fixture
-def feature_with_elevation(height_plateaus: dict[str, Any]) -> dict[str, Any]:
-    feature = height_plateaus["features"][0]
-    assert isinstance(feature, dict)
-    return feature
-
-
-@pytest.fixture
-def polygon(feature: dict[str, Any]) -> dict[str, Any]:
-    polygon = feature["geometry"]
-    assert isinstance(polygon, dict)
-    return polygon
 
 
 class TestPolygon2d:
@@ -87,7 +46,7 @@ class TestPolygon2dFeatureCollection:
     """
 
     def test_valid(self, building_limits: dict[str, Any]) -> None:
-        _feature_collection = BuildingLimits(**building_limits)
+        _feature_collection = Polygon2dFeatureCollection(**building_limits)
 
     def test_invalid_feature(self) -> None:
         point = Point(type="Point", coordinates=[0.0, 0.0])
@@ -100,18 +59,3 @@ class TestPolygon2dFeatureCollection:
         feature_collection = Polygon2dFeatureCollection(**building_limits)
         dump = feature_collection.model_dump()
         assert isinstance(dump, dict)
-
-
-class TestHeightPlateaus:
-    def test_valid(self, height_plateaus: dict[str, Any]) -> None:
-        _height_plateaus = HeightPlateaus(**height_plateaus)
-
-    def test_invalid_missing_elevation(self, height_plateaus: dict[str, Any]) -> None:
-        del height_plateaus["features"][0]["properties"]["elevation"]
-        with pytest.raises(ValidationError, match="Missing 'elevation' property"):
-            _height_plateaus = HeightPlateaus(**height_plateaus)
-
-    def test_invalid_elevation_not_float(self, height_plateaus: dict[str, Any]) -> None:
-        height_plateaus["features"][0]["properties"]["elevation"] = "a"
-        with pytest.raises(ValidationError, match="'elevation' property must be a float"):
-            _height_plateaus = HeightPlateaus(**height_plateaus)
