@@ -8,6 +8,7 @@ authors = ["Peet Cremer <peet.cremer@gmail.com>"]
 jupyterlab = "^4.0.8"
 geojsonio = "^0.0.3"
 httpx = "^0.25.1"
+matplotlib = "^3.8.1"
 
 [tool.black]
 line-length = 120

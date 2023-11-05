@@ -24,6 +24,7 @@ ENV VIRTUAL_ENV=/app/.venv \
     PATH="/app/.venv/bin:$PATH"
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+# Only copy the arch_api package, not the tests or auxiliary files
 COPY arch_api/ /app/arch_api
 
 ENV UVICORN_HOST="0.0.0.0"

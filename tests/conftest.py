@@ -4,21 +4,34 @@ from typing import Any
 
 import pytest
 
-_TEST_CASES_PATH = Path(__file__).parent / "testcases"
+TEST_CASES_PATH = Path(__file__).parent / "testcases"
 
 
-@pytest.fixture
-def building_limits() -> dict[str, Any]:
-    with open(_TEST_CASES_PATH / "vaterlandsparken" / "building_limits.geojson") as f:
+def load_testcase(testcase: str) -> dict[str, dict[str, Any]]:
+    test_case_path = TEST_CASES_PATH / testcase
+    with open(test_case_path / "building_limits.geojson") as f:
         building_limits: dict[str, Any] = json.load(f)
-    return building_limits
+    with open(test_case_path / "height_plateaus.geojson") as f:
+        height_plateaus: dict[str, Any] = json.load(f)
+    return {
+        "building_limits": building_limits,
+        "height_plateaus": height_plateaus,
+    }
 
 
 @pytest.fixture
-def height_plateaus() -> dict[str, Any]:
-    with open(_TEST_CASES_PATH / "vaterlandsparken" / "height_plateaus.geojson") as f:
-        height_plateaus: dict[str, Any] = json.load(f)
-    return height_plateaus
+def vaterlandsparken_test_case() -> dict[str, dict[str, Any]]:
+    return load_testcase("vaterlandsparken")
+
+
+@pytest.fixture
+def building_limits(vaterlandsparken_test_case: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    return vaterlandsparken_test_case["building_limits"]
+
+
+@pytest.fixture
+def height_plateaus(vaterlandsparken_test_case: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    return vaterlandsparken_test_case["height_plateaus"]
 
 
 @pytest.fixture
