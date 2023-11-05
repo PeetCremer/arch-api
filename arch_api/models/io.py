@@ -15,7 +15,6 @@ class BuildingLimits(NonEmptyPolygon2dFeatureCollection):
     with at least one polygon
     """
 
-    # TODO add check that at least one feature is present
     ...
 
 

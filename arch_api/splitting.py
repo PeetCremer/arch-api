@@ -45,6 +45,14 @@ def split_building_limits_by_height_plateaus(building_limits: BuildingLimits, he
     if not covers:
         raise SplittingError("The height plateaus do not completely cover the building limits")
 
-    # TODO create a proper split. For now, we just copy the height_plateaus
-    split = Split(**height_plateaus.model_dump())
+    # The split of the height plateaus by the building limits is their intersection
+    # (Since the height plateaus fully cover)
+    #
+    # keep_geom_type=True because we want no intersections other than polygons (no points or lines)
+    split_df = height_plateaus_df.overlay(building_limits_df, keep_geom_type=True, how="intersection")
+
+    # Convert the output back to a FeatureCollection
+    features = [feature for feature in split_df.iterfeatures()]
+    split = Split(type="FeatureCollection", features=features)
+
     return split

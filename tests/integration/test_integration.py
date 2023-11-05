@@ -59,7 +59,27 @@ async def created_multiple_splits(
 class TestCreateSplit:
     @pytest.mark.asyncio
     async def test_valid(self, created_split: dict[str, Any]) -> None:
-        pass
+        features = created_split["split"]["features"]
+        assert len(features) == 3
+        # elevations should be all different
+        assert features[0]["properties"]["elevation"] != features[1]["properties"]["elevation"]
+        assert features[0]["properties"]["elevation"] != features[2]["properties"]["elevation"]
+        assert features[1]["properties"]["elevation"] != features[2]["properties"]["elevation"]
+
+    @pytest.mark.asyncio
+    async def test_invalid_height_plateaus_do_not_cover(
+        self, test_client: TestClient, height_plateaus: dict[str, Any], building_limits: dict[str, Any]
+    ) -> None:
+        # remove one point from height plateaus so that they no longer cover
+        height_plateaus["features"][0]["geometry"]["coordinates"][0].pop()
+        height_plateaus["features"][0]["geometry"]["coordinates"][0][-1] = height_plateaus["features"][0]["geometry"][
+            "coordinates"
+        ][0][0]
+        response = await test_client.create_split(
+            {"building_limits": building_limits, "height_plateaus": height_plateaus}
+        )
+        assert response.status_code == fastapi.status.HTTP_400_BAD_REQUEST
+        assert "The height plateaus do not completely cover the building limits" in response.json().get("detail")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("missing", ["building_limits", "height_plateaus"])

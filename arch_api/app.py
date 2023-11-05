@@ -50,7 +50,6 @@ async def get_split(project: str, id: str) -> CreateSplitOutput:
 
 @app.post("/projects/{project}/splits", status_code=fastapi.status.HTTP_201_CREATED)
 async def create_split(project: str, input: CreateSplitInput) -> CreateSplitOutput:
-    # TODO create a proper split. For now, we just copy the height_plateaus
     logging.debug("Processing split")
     split = split_building_limits_by_height_plateaus(input.building_limits, input.height_plateaus)
     logging.debug("Processing split done")
