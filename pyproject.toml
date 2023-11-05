@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "arch_api"
-version = "0.1.0"
+version = "0.2.0"
 description = "Consumes building limits and height plateaus, splits up the building limits according to the height plateaus, and stores these three entities persistently"
 authors = ["Peet Cremer <peet.cremer@gmail.com>"]
 
