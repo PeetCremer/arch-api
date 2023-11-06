@@ -4,14 +4,14 @@ from typing import Any
 
 import pytest
 
-TEST_CASES_PATH = Path(__file__).parent / "testcases"
+TESTCASES_PATH = Path(__file__).parent / "testcases"
 
 
 def load_testcase(testcase: str) -> dict[str, dict[str, Any]]:
-    test_case_path = TEST_CASES_PATH / testcase
-    with open(test_case_path / "building_limits.geojson") as f:
+    testcase_path = TESTCASES_PATH / testcase
+    with open(testcase_path / "building_limits.geojson") as f:
         building_limits: dict[str, Any] = json.load(f)
-    with open(test_case_path / "height_plateaus.geojson") as f:
+    with open(testcase_path / "height_plateaus.geojson") as f:
         height_plateaus: dict[str, Any] = json.load(f)
     return {
         "building_limits": building_limits,
@@ -20,18 +20,38 @@ def load_testcase(testcase: str) -> dict[str, dict[str, Any]]:
 
 
 @pytest.fixture
-def vaterlandsparken_test_case() -> dict[str, dict[str, Any]]:
+def valid_testcases() -> list[dict[str, dict[str, Any]]]:
+    testcases = []
+    for path in TESTCASES_PATH.iterdir():
+        testcase = path.name
+        if testcase.startswith("valid_"):
+            testcases.append(load_testcase(testcase))
+    return testcases
+
+
+@pytest.fixture
+def invalid_testcases() -> list[dict[str, dict[str, Any]]]:
+    testcases = []
+    for path in TESTCASES_PATH.iterdir():
+        testcase = path.name
+        if testcase.startswith("invalid_"):
+            testcases.append(load_testcase(testcase))
+    return testcases
+
+
+@pytest.fixture
+def vaterlandsparken_testcase() -> dict[str, dict[str, Any]]:
     return load_testcase("vaterlandsparken")
 
 
 @pytest.fixture
-def building_limits(vaterlandsparken_test_case: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    return vaterlandsparken_test_case["building_limits"]
+def building_limits(vaterlandsparken_testcase: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    return vaterlandsparken_testcase["building_limits"]
 
 
 @pytest.fixture
-def height_plateaus(vaterlandsparken_test_case: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    return vaterlandsparken_test_case["height_plateaus"]
+def height_plateaus(vaterlandsparken_testcase: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    return vaterlandsparken_testcase["height_plateaus"]
 
 
 @pytest.fixture

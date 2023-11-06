@@ -58,7 +58,7 @@ async def created_multiple_splits(
 
 class TestCreateSplit:
     @pytest.mark.asyncio
-    async def test_valid(self, created_split: dict[str, Any]) -> None:
+    async def test_vaterlandsparken(self, created_split: dict[str, Any]) -> None:
         features = created_split["split"]["features"]
         assert len(features) == 3
         # elevations should be all different
@@ -125,6 +125,26 @@ class TestCreateSplit:
         response = await test_client.create_split(input)
         assert response.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
         assert "'elevation' property must be a float" in response.json().get("detail")[0].get("msg")
+
+    @pytest.mark.asyncio
+    async def test_invalid_testcases(
+        self, test_client: TestClient, invalid_testcases: list[dict[str, dict[str, Any]]]
+    ) -> None:
+        for testcase in invalid_testcases:
+            response = await test_client.create_split(testcase)
+            assert response.status_code in [
+                fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY,
+                fastapi.status.HTTP_400_BAD_REQUEST,
+            ]
+
+    @pytest.mark.asyncio
+    async def test_valid_testcases(
+        self, test_client: TestClient, valid_testcases: list[dict[str, dict[str, Any]]]
+    ) -> None:
+        for testcase in valid_testcases:
+            response = await test_client.create_split(testcase)
+            assert response.status_code == fastapi.status.HTTP_201_CREATED
+        await delete_all_splits(test_client)
 
 
 class TestDeleteSplit:
