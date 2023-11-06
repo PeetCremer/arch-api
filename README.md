@@ -121,6 +121,7 @@ user -->|"POST\nLongitude\nLatitude"| fast_api -->|geoquery| database
 
 ## Next steps
 - Improve the CI / CD setup to automatically deploy the API to the cloud from release branches
+- Improve CI / CD to include testing when merging Pull Requests
 - Implement geospatial queries in the API
 - Implement authentication and authorization
 - Create more testcases and harden the API against edge cases
