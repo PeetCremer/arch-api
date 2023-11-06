@@ -52,7 +52,19 @@ def split_building_limits_by_height_plateaus(building_limits: BuildingLimits, he
     split_df = height_plateaus_df.overlay(building_limits_df, keep_geom_type=True, how="intersection")
 
     # Convert the output back to a FeatureCollection
-    features = [feature for feature in split_df.iterfeatures()]
+    features = []
+    # Results can be "MultiPolygon". We need to split those up to have a common interface
+    for feature in split_df.iterfeatures():
+        geometry = feature["geometry"]
+        geometry_type = geometry["type"]
+        if geometry_type == "MultiPolygon":
+            for polygon_coords in geometry["coordinates"]:
+                polygon = {**geometry, "coordinates": polygon_coords, "type": "Polygon"}
+                features.append({**feature, "geometry": polygon})
+        elif geometry_type == "Polygon":
+            features.append(feature)
+        else:
+            raise ValueError(f"Unexpected GeoJson type {geometry_type} in split results")
     split = Split(type="FeatureCollection", features=features)
 
     return split

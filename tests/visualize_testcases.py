@@ -25,9 +25,12 @@ class Client:
             response.raise_for_status()
         except requests.HTTPError as e:
             assert e.response is not None
-            content_json = json.loads(e.response.content)
-            content_pretty_str = json.dumps(content_json, indent=4)
-            print(content_pretty_str)
+            try:
+                content_json = json.loads(e.response.content)
+                content_pretty_str = json.dumps(content_json, indent=4)
+                print(content_pretty_str)
+            except json.decoder.JSONDecodeError:
+                print(e.response.content)
             return None
         split = response.json()
         assert isinstance(split, dict)

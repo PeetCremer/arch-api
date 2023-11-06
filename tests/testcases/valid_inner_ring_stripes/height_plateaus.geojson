@@ -1,0 +1,104 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            [
+              -3.0,
+              -4.0
+            ],
+            [
+              -1.0,
+              -4.0
+            ],
+            [
+              -1.0,
+              4.0
+            ],
+            [
+              -3.0,
+              4.0
+            ],
+            [
+              -3.0,
+              -4.0
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "properties": {
+        "elevation": 1.0
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            [
+              -1.0,
+              -4.0
+            ],
+            [
+              1.0,
+              -4.0
+            ],
+            [
+              1.0,
+              4.0
+            ],
+            [
+              -1.0,
+              4.0
+            ],
+            [
+              -1.0,
+              -4.0
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "properties": {
+        "elevation": 2.0
+      },
+      "type": "Feature"
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          [
+            [
+              1.0,
+              -4.0
+            ],
+            [
+              3.0,
+              -4.0
+            ],
+            [
+              3.0,
+              4.0
+            ],
+            [
+              1.0,
+              4.0
+            ],
+            [
+              1.0,
+              -4.0
+            ]
+          ]
+        ],
+        "type": "Polygon"
+      },
+      "properties": {
+        "elevation": 3.0
+      },
+      "type": "Feature"
+    }
+  ]
+}
