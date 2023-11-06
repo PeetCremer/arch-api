@@ -6,13 +6,14 @@ You can find the documentation here: **http://api.arch-api.com/docs**
 
 ## Features
 - `splits` (the results of splitting building limits by height plateaus) can be organized into different `projects`
-- `POST /projects/{project}/splits` creates a new `split`, gives it an `id`, and stores it in the database
-- `GET /projects/{project}/splits/{id}` returns a previously created `split` by its `id`
-- `GET /projects/{project}/splits` list all `splits` in a `project`
-- `DELETE /projects/{project}/splits/{id}` deletes a previously created `split` by its `id`
-- `DELETE /projects/{project}/splits` deletes all `splits` in a `project`
-
+- Supported operations:
+    - `POST /projects/{project}/splits` creates a new `split`, gives it an `id`, and stores it in the database
+    - `GET /projects/{project}/splits/{id}` returns a previously created `split` by its `id`
+    - `GET /projects/{project}/splits` list all `splits` in a `project`
+    - `DELETE /projects/{project}/splits/{id}` deletes a previously created `split` by its `id`
+    - `DELETE /projects/{project}/splits` deletes all `splits` in a `project`
 - Order your `splits` into different `projects`**Splitting** of building limits according to height plateaus using the
+- Automatic deployment of docker image to cloud registry using Github Actions
 
 ## Development
 ### Prerequisites
