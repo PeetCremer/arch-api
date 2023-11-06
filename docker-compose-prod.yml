@@ -1,7 +1,7 @@
 version: '3.5'
 services:
   arch_api:
-    image: europe-west1-docker.pkg.dev/arch-api-403919/arch-api-registry/arch-api:latest
+    image: europe-west1-docker.pkg.dev/arch-api-403919/arch-api-registry/arch-api:main
     restart: always
     ports:
       - "80:8000"
