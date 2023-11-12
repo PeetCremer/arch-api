@@ -1,8 +1,10 @@
 import logging
 import os
+from typing import Annotated
 
 import bson
 import fastapi
+from annotated_types import Interval
 from arch_api.db import (
     MAX_PAGE_SIZE,
     delete_all_split_triples,
@@ -17,7 +19,8 @@ from arch_api.models.io import CreateSplitInput, CreateSplitOutput
 from arch_api.splitting import split_building_limits_by_height_plateaus
 from bson.errors import InvalidId
 from dotenv import load_dotenv
-from fastapi import HTTPException
+from fastapi import HTTPException, Query
+from pydantic.types import NonNegativeInt
 
 # Initialize DB
 load_dotenv()
@@ -90,7 +93,14 @@ async def delete_all_splits(project: str) -> dict[str, int]:
     return {"num_deleted": num_deleted}
 
 
+IntInPageSizeInterval = Annotated[int, Interval(ge=0, le=MAX_PAGE_SIZE)]
+
+
 @app.get("/projects/{project}/splits", status_code=fastapi.status.HTTP_200_OK)
-async def list_splits(project: str, skip: int = 0, limit: int = MAX_PAGE_SIZE) -> list[CreateSplitOutput]:
+async def list_splits(
+    project: str,
+    skip: Annotated[NonNegativeInt, Query()] = 0,
+    limit: Annotated[IntInPageSizeInterval, Query()] = MAX_PAGE_SIZE,
+) -> list[CreateSplitOutput]:
     docs = await list_split_triples(_DATABASE, project, skip, limit)
     return [CreateSplitOutput.from_doc(doc) for doc in docs]

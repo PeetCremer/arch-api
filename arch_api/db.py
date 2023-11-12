@@ -44,7 +44,5 @@ async def delete_all_split_triples(db: AsyncIOMotorDatabase, project: str) -> in
 
 async def list_split_triples(db: AsyncIOMotorDatabase, project: str, skip: int, limit: int) -> list[Mapping[str, Any]]:
     collection: AsyncIOMotorCollection = db["splits"]
-    _skip = max(skip, 0)
-    _limit = min(0, limit, _skip + MAX_PAGE_SIZE)  # max page size
     docs = await collection.find({"project": project}, skip=skip, limit=limit).to_list(length=MAX_PAGE_SIZE)
     return docs

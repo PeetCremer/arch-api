@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 from arch_api.app import app
+from arch_api.db import MAX_PAGE_SIZE
 from httpx import AsyncClient, Response
 
 
@@ -34,6 +35,11 @@ class TestClient(AsyncClient):
 
     async def delete_all_splits(self) -> Response:
         response = await self.delete(f"/projects/{self.project}/splits")
+        assert isinstance(response, Response)
+        return response
+
+    async def list_splits(self, skip: int = 0, limit: int = MAX_PAGE_SIZE) -> Response:
+        response = await self.get(f"/projects/{self.project}/splits", params={"skip": skip, "limit": limit})
         assert isinstance(response, Response)
         return response
 

@@ -38,8 +38,8 @@ async def created_split(test_client: TestClient, vaterlandsparken_testcase: Test
 
 @pytest.fixture
 async def created_multiple_splits(test_client: TestClient, vaterlandsparken_testcase: Testcase) -> list[dict[str, Any]]:
-    num = 10
-    splits = [await create_sample_split(test_client, vaterlandsparken_testcase) for i in range(num)]
+    num = 42
+    splits = [await create_sample_split(test_client, vaterlandsparken_testcase) for _ in range(num)]
     yield splits
     # Teardown
     for split in splits:
@@ -197,3 +197,51 @@ class TestDeleteAllSplits:
     ) -> None:
         num_deleted = await delete_all_splits(test_client)
         assert num_deleted == len(created_multiple_splits)
+
+
+class TestListSplits:
+    @pytest.fixture(autouse=True, scope="class")
+    async def cleanup_before(self, test_client: TestClient) -> None:
+        """
+        Cleanup any previously created splits before running any tests in the class
+        """
+        # Code that runs before tests goes here
+        await delete_all_splits(test_client)
+        yield
+        # Code that runs after tests goes here
+        pass
+
+    @pytest.mark.asyncio
+    async def test_bad_skip(self, test_client: TestClient) -> None:
+        response = await test_client.list_splits(skip=-1)
+        assert response.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+        type = response.json().get("detail")[0].get("type")
+        assert type == "greater_than_equal"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("limit", [-1, 11])
+    async def test_bad_limit(self, test_client: TestClient, limit: int) -> None:
+        response = await test_client.list_splits(limit=limit)
+        assert response.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+        type = response.json().get("detail")[0].get("type")
+        assert type in ["greater_than_equal", "less_than_equal"]
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ["skip", "limit", "expected_len"], [(0, 0, 10), (0, 10, 10), (40, 10, 2), (42, 10, 0), (0, 5, 5), (38, 5, 4)]
+    )
+    async def test_skip_and_limit(
+        self,
+        test_client: TestClient,
+        created_multiple_splits: list[dict[str, Any]],
+        skip: int,
+        limit: int,
+        expected_len: int,
+    ) -> None:
+        response = await test_client.list_splits(skip=skip, limit=limit)
+        assert response.status_code == fastapi.status.HTTP_200_OK
+        items = response.json()
+        assert isinstance(items, list)
+        assert len(items) == expected_len
+
+    # def test_skip_non_negative()
