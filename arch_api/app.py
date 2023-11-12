@@ -46,6 +46,9 @@ async def health() -> dict[str, str]:
 
 @app.get("/projects/{project}/splits/{id}")
 async def get_split(project: str, id: str) -> CreateSplitOutput:
+    """
+    Retrieve a split triple in a given project by id
+    """
     # potential bson.errors.InvalidId is handled by exception handler
     object_id = bson.ObjectId(id)
 
@@ -59,6 +62,9 @@ async def get_split(project: str, id: str) -> CreateSplitOutput:
 
 @app.post("/projects/{project}/splits", status_code=fastapi.status.HTTP_201_CREATED)
 async def create_split(project: str, input: CreateSplitInput) -> CreateSplitOutput:
+    """
+    Create a split triple in a given project from height_plateaus and building_limits
+    """
     logging.debug("Processing split")
     split = split_building_limits_by_height_plateaus(input.building_limits, input.height_plateaus)
     logging.debug("Processing split done")
@@ -79,6 +85,9 @@ async def create_split(project: str, input: CreateSplitInput) -> CreateSplitOutp
 
 @app.delete("/projects/{project}/splits/{id}", status_code=fastapi.status.HTTP_204_NO_CONTENT)
 async def delete_split(project: str, id: str) -> None:
+    """
+    Delete a split triple in a given project by id
+    """
     # potential bson.errors.InvalidId is handled by exception handler
     object_id = bson.ObjectId(id)
 
@@ -89,6 +98,9 @@ async def delete_split(project: str, id: str) -> None:
 
 @app.delete("/projects/{project}/splits", status_code=fastapi.status.HTTP_200_OK)
 async def delete_all_splits(project: str) -> dict[str, int]:
+    """
+    Delete all split triple in a given project
+    """
     num_deleted = await delete_all_split_triples(_DATABASE, project)
     return {"num_deleted": num_deleted}
 
@@ -102,5 +114,8 @@ async def list_splits(
     skip: Annotated[NonNegativeInt, Query()] = 0,
     limit: Annotated[IntInPageSizeInterval, Query()] = MAX_PAGE_SIZE,
 ) -> list[CreateSplitOutput]:
+    """
+    List all split triples in a given project. Pagination can be achieved by using skip and limit.
+    """
     docs = await list_split_triples(_DATABASE, project, skip, limit)
     return [CreateSplitOutput.from_doc(doc) for doc in docs]
