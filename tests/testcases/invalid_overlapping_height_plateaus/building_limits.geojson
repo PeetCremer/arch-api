@@ -53,37 +53,6 @@
       },
       "properties": {},
       "type": "Feature"
-    },
-    {
-      "geometry": {
-        "coordinates": [
-          [
-            [
-              1.0,
-              1.0
-            ],
-            [
-              1.0,
-              -1.0
-            ],
-            [
-              -1.0,
-              -1.0
-            ],
-            [
-              -1.0,
-              1.0
-            ],
-            [
-              1.0,
-              1.0
-            ]
-          ]
-        ],
-        "type": "Polygon"
-      },
-      "properties": {},
-      "type": "Feature"
     }
   ]
 }

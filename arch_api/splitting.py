@@ -25,11 +25,19 @@ def split_building_limits_by_height_plateaus(building_limits: BuildingLimits, he
 
     Raises:
         SplittingError: If the height plateaus do not completely cover the building limits
+        SplittingError: If the building limits overlap with themselves
+        SplittingError: If the height plateaus overlap with themselves
     """
     # Transform inputs into GeoDataFrames to enable geometric queries
     # using the coordinate reference system (crs) defined above
     building_limits_df = GeoDataFrame.from_features(building_limits.model_dump(), crs=CRS)
     height_plateaus_df = GeoDataFrame.from_features(height_plateaus.model_dump(), crs=CRS)
+
+    # Check that the the input geometries do not intersect with themselves
+    if check_geometry_overlap(building_limits_df):
+        raise SplittingError("The building limits must not overlap with themselves")
+    if check_geometry_overlap(height_plateaus_df):
+        raise SplittingError("The height plateaus must not overlap with themselves")
 
     # Check that the height plateaus completely cover the building limits
     #
@@ -68,3 +76,24 @@ def split_building_limits_by_height_plateaus(building_limits: BuildingLimits, he
     split = Split(type="FeatureCollection", features=features)
 
     return split
+
+
+def check_geometry_overlap(dataframe: GeoDataFrame) -> bool:
+    """
+    Checks if the geometries in GeoDataFrame overlap with each other
+
+    Args:
+        dataframe (GeoDataFrame): The GeoDataFrame to check. Must only contain Polygon geometries
+    Returns:
+        bool: True if the geometry overlaps with itself, False otherwise
+    """
+    # A cheap and robust way to check whether the geometries overlap:
+    # They overlap if the sum of the areas of the individual geometries
+    # is larger than the area of the union of the geometries
+    union_area = dataframe.unary_union.area
+    assert isinstance(union_area, float)
+    sum_area = dataframe.area.sum()
+    assert isinstance(sum_area, float)
+    # Allow for some tolerance
+    is_overlap = abs(sum_area - union_area) > TOL
+    return is_overlap
