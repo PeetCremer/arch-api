@@ -4,6 +4,7 @@ from typing import Any
 import fastapi
 import pytest
 
+from tests.conftest import Testcase
 from tests.integration.conftest import TestClient
 
 
@@ -67,7 +68,7 @@ class TestCreateSplit:
         assert features[1]["properties"]["elevation"] != features[2]["properties"]["elevation"]
 
     @pytest.mark.asyncio
-    async def test_invalid_height_plateaus_do_not_cover(
+    async def test_height_plateaus_do_not_cover(
         self, test_client: TestClient, height_plateaus: dict[str, Any], building_limits: dict[str, Any]
     ) -> None:
         # remove one point from height plateaus so that they no longer cover
@@ -83,7 +84,7 @@ class TestCreateSplit:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("missing", ["building_limits", "height_plateaus"])
-    async def test_invalid_missing_input(
+    async def test_missing_input(
         self, missing: str, test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
     ) -> None:
         input = {
@@ -114,7 +115,7 @@ class TestCreateSplit:
         assert "Missing 'elevation' property" in response.json().get("detail")[0].get("msg")
 
     @pytest.mark.asyncio
-    async def test_invalid_elevation_type(
+    async def test_wrong_type_for_elevation(
         self, test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
     ) -> None:
         height_plateaus["features"][0]["properties"]["elevation"] = "wrong type"
@@ -127,23 +128,17 @@ class TestCreateSplit:
         assert "'elevation' property must be a float" in response.json().get("detail")[0].get("msg")
 
     @pytest.mark.asyncio
-    async def test_invalid_testcases(
-        self, test_client: TestClient, invalid_testcases: list[dict[str, dict[str, Any]]]
-    ) -> None:
-        for testcase in invalid_testcases:
-            response = await test_client.create_split(testcase)
-            assert response.status_code in [
-                fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY,
-                fastapi.status.HTTP_400_BAD_REQUEST,
-            ]
+    async def test_invalid_testcases(self, test_client: TestClient, invalid_testcase: Testcase) -> None:
+        response = await test_client.create_split(invalid_testcase)
+        assert response.status_code in [
+            fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY,
+            fastapi.status.HTTP_400_BAD_REQUEST,
+        ]
 
     @pytest.mark.asyncio
-    async def test_valid_testcases(
-        self, test_client: TestClient, valid_testcases: list[dict[str, dict[str, Any]]]
-    ) -> None:
-        for testcase in valid_testcases:
-            response = await test_client.create_split(testcase)
-            assert response.status_code == fastapi.status.HTTP_201_CREATED
+    async def test_valid_testcases(self, test_client: TestClient, valid_testcase: Testcase) -> None:
+        response = await test_client.create_split(valid_testcase)
+        assert response.status_code == fastapi.status.HTTP_201_CREATED
         await delete_all_splits(test_client)
 
 
@@ -178,7 +173,7 @@ class TestGetSplit:
         assert dict_to_deep_ordered_dict(split) == dict_to_deep_ordered_dict(created_split)
 
     @pytest.mark.asyncio
-    async def test_missing(self, test_client: TestClient, created_split: dict[str, Any]) -> None:
+    async def test_split_not_found(self, test_client: TestClient, created_split: dict[str, Any]) -> None:
         response = await test_client.delete_split(created_split["id"])
         assert response.status_code == fastapi.status.HTTP_204_NO_CONTENT
         response = await test_client.get_split(created_split["id"])
@@ -186,10 +181,10 @@ class TestGetSplit:
         assert response.json().get("detail") == "Split not found"
 
     @pytest.mark.asyncio
-    async def test_invalid_id(self, test_client: TestClient) -> None:
-        response = await test_client.get_split("invalid")
+    async def test_bad_object_id(self, test_client: TestClient) -> None:
+        response = await test_client.get_split("bad_id")
         assert response.status_code == fastapi.status.HTTP_400_BAD_REQUEST
-        assert "'invalid' is not a valid ObjectId" in response.json().get("detail")
+        assert "'bad_id' is not a valid ObjectId" in response.json().get("detail")
 
 
 class TestDeleteAllSplits:

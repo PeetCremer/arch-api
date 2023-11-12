@@ -4,10 +4,12 @@ from typing import Any
 
 import pytest
 
+Testcase = dict[str, dict[str, Any]]
 TESTCASES_PATH = Path(__file__).parent / "testcases"
+TESTCASE_NAMES = [path.name for path in TESTCASES_PATH.iterdir()]
 
 
-def load_testcase(testcase: str) -> dict[str, dict[str, Any]]:
+def load_testcase(testcase: str) -> Testcase:
     testcase_path = TESTCASES_PATH / testcase
     with open(testcase_path / "building_limits.geojson") as f:
         building_limits: dict[str, Any] = json.load(f)
@@ -19,24 +21,14 @@ def load_testcase(testcase: str) -> dict[str, dict[str, Any]]:
     }
 
 
-@pytest.fixture
-def valid_testcases() -> list[dict[str, dict[str, Any]]]:
-    testcases = []
-    for path in TESTCASES_PATH.iterdir():
-        testcase = path.name
-        if testcase.startswith("valid_"):
-            testcases.append(load_testcase(testcase))
-    return testcases
+@pytest.fixture(scope="session", params=[name for name in TESTCASE_NAMES if name.startswith("valid_")])
+def valid_testcase(request: pytest.FixtureRequest) -> Testcase:
+    return load_testcase(request.param)
 
 
-@pytest.fixture
-def invalid_testcases() -> list[dict[str, dict[str, Any]]]:
-    testcases = []
-    for path in TESTCASES_PATH.iterdir():
-        testcase = path.name
-        if testcase.startswith("invalid_"):
-            testcases.append(load_testcase(testcase))
-    return testcases
+@pytest.fixture(scope="session", params=[name for name in TESTCASE_NAMES if name.startswith("invalid_")])
+def invalid_testcase(request: pytest.FixtureRequest) -> dict[str, Testcase]:
+    return load_testcase(request.param)
 
 
 @pytest.fixture
