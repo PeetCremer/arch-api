@@ -48,6 +48,16 @@ async def created_multiple_splits(test_client: TestClient, vaterlandsparken_test
 
 
 class TestCreateSplit:
+    @pytest.fixture(autouse=True, scope="class")
+    async def cleanup_after_tests(self, test_client: TestClient) -> None:
+        """
+        Cleanup all created splits after all tests in the class are concluded
+        """
+        # Code that runs before tests goes here
+        yield
+        # Code that runs after tests goes here
+        await delete_all_splits(test_client)
+
     @pytest.mark.asyncio
     async def test_vaterlandsparken(self, created_split: dict[str, Any]) -> None:
         features = created_split["split"]["features"]
@@ -117,7 +127,6 @@ class TestCreateSplit:
     async def test_valid_testcases(self, test_client: TestClient, valid_testcase: Testcase) -> None:
         response = await test_client.create_split(valid_testcase)
         assert response.status_code == fastapi.status.HTTP_201_CREATED
-        await delete_all_splits(test_client)
 
 
 class TestDeleteSplit:
@@ -166,6 +175,17 @@ class TestGetSplit:
 
 
 class TestDeleteAllSplits:
+    @pytest.fixture(autouse=True, scope="function")
+    async def cleanup_before_each_test(self, test_client: TestClient) -> None:
+        """
+        Cleanup any previously created splits before each test in the class
+        """
+        # Code that runs before tests goes here
+        await delete_all_splits(test_client)
+        yield
+        # Code that runs after tests goes here
+        pass
+
     @pytest.mark.asyncio
     async def test_delete_zero(self, test_client: TestClient) -> None:
         num_deleted = await delete_all_splits(test_client)
