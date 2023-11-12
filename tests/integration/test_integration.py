@@ -19,14 +19,8 @@ async def delete_all_splits(test_client: TestClient) -> int:
     return num_deleted
 
 
-async def create_sample_split(
-    test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
-) -> dict[str, Any]:
-    input = {
-        "building_limits": building_limits,
-        "height_plateaus": height_plateaus,
-    }
-    response = await test_client.create_split(input)
+async def create_sample_split(test_client: TestClient, testcase: Testcase) -> dict[str, Any]:
+    response = await test_client.create_split(testcase)
     assert response.status_code == fastapi.status.HTTP_201_CREATED
     split = response.json()
     assert isinstance(split, dict)
@@ -34,10 +28,8 @@ async def create_sample_split(
 
 
 @pytest.fixture
-async def created_split(
-    test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
-) -> dict[str, Any]:
-    split = await create_sample_split(test_client, building_limits, height_plateaus)
+async def created_split(test_client: TestClient, vaterlandsparken_testcase: Testcase) -> dict[str, Any]:
+    split = await create_sample_split(test_client, vaterlandsparken_testcase)
     yield split
     # Teardown
     response = await test_client.delete_split(split["id"])
@@ -45,11 +37,9 @@ async def created_split(
 
 
 @pytest.fixture
-async def created_multiple_splits(
-    test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
-) -> list[dict[str, Any]]:
+async def created_multiple_splits(test_client: TestClient, vaterlandsparken_testcase: Testcase) -> list[dict[str, Any]]:
     num = 10
-    splits = [await create_sample_split(test_client, building_limits, height_plateaus) for i in range(num)]
+    splits = [await create_sample_split(test_client, vaterlandsparken_testcase) for i in range(num)]
     yield splits
     # Teardown
     for split in splits:
@@ -69,30 +59,26 @@ class TestCreateSplit:
 
     @pytest.mark.asyncio
     async def test_height_plateaus_do_not_cover(
-        self, test_client: TestClient, height_plateaus: dict[str, Any], building_limits: dict[str, Any]
+        self, test_client: TestClient, vaterlandsparken_testcase: Testcase
     ) -> None:
         # remove one point from height plateaus so that they no longer cover
+        height_plateaus = vaterlandsparken_testcase["height_plateaus"]
         height_plateaus["features"][0]["geometry"]["coordinates"][0].pop()
         height_plateaus["features"][0]["geometry"]["coordinates"][0][-1] = height_plateaus["features"][0]["geometry"][
             "coordinates"
         ][0][0]
-        response = await test_client.create_split(
-            {"building_limits": building_limits, "height_plateaus": height_plateaus}
-        )
+        response = await test_client.create_split(vaterlandsparken_testcase)
         assert response.status_code == fastapi.status.HTTP_400_BAD_REQUEST
         assert "The height plateaus do not completely cover the building limits" in response.json().get("detail")
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("missing", ["building_limits", "height_plateaus"])
     async def test_missing_input(
-        self, missing: str, test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
+        self, missing: str, test_client: TestClient, vaterlandsparken_testcase: Testcase
     ) -> None:
-        input = {
-            "building_limits": building_limits,
-            "height_plateaus": height_plateaus,
-        }
-        del input[missing]
-        response = await test_client.create_split(input)
+        # Delete one of the inputs
+        del vaterlandsparken_testcase[missing]
+        response = await test_client.create_split(vaterlandsparken_testcase)
         assert response.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
         type = response.json().get("detail")[0].get("type")
         assert type == "missing"
@@ -103,27 +89,19 @@ class TestCreateSplit:
 
     @pytest.mark.asyncio
     async def test_invalid_missing_elevation(
-        self, test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
+        self, test_client: TestClient, vaterlandsparken_testcase: Testcase
     ) -> None:
+        height_plateaus = vaterlandsparken_testcase["height_plateaus"]
         del height_plateaus["features"][0]["properties"]["elevation"]
-        input = {
-            "building_limits": building_limits,
-            "height_plateaus": height_plateaus,
-        }
-        response = await test_client.create_split(input)
+        response = await test_client.create_split(vaterlandsparken_testcase)
         assert response.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
         assert "Missing 'elevation' property" in response.json().get("detail")[0].get("msg")
 
     @pytest.mark.asyncio
-    async def test_wrong_type_for_elevation(
-        self, test_client: TestClient, building_limits: dict[str, Any], height_plateaus: dict[str, Any]
-    ) -> None:
+    async def test_wrong_type_for_elevation(self, test_client: TestClient, vaterlandsparken_testcase: Testcase) -> None:
+        height_plateaus = vaterlandsparken_testcase["height_plateaus"]
         height_plateaus["features"][0]["properties"]["elevation"] = "wrong type"
-        input = {
-            "building_limits": building_limits,
-            "height_plateaus": height_plateaus,
-        }
-        response = await test_client.create_split(input)
+        response = await test_client.create_split(vaterlandsparken_testcase)
         assert response.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
         assert "'elevation' property must be a float" in response.json().get("detail")[0].get("msg")
 
